@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/MatiasWengiel/tinyapp/issues"
   },
-  "homepage": "https://github.com/MatiasWengiel/tinyapp#readme"
+  "homepage": "https://github.com/MatiasWengiel/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.0"
+  }
 }
