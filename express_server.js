@@ -53,6 +53,15 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect(302, "/urls");
 })
 
+app.post('/urls/:shortURL/edit', (req, res) => {
+  let newURL = req.body.newURL;
+  if (newURL.substring(0,6) !== "http://" || newURL.substring(0,7) !== "https://") {
+    newURL = "http://" + newURL;
+  }
+  urlDatabase[req.params.shortURL] = newURL
+  res.redirect(302, '/urls')
+})
+
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL
