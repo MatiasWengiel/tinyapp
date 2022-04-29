@@ -55,6 +55,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 app.post('/urls/:shortURL/edit', (req, res) => {
   let newURL = req.body.newURL;
+  // Ensures paths to new websites are absolute rather than relative
   if (newURL.substring(0,6) !== "http://" || newURL.substring(0,7) !== "https://") {
     newURL = "http://" + newURL;
   }
