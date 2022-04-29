@@ -4,7 +4,7 @@ const PORT = 8080;
 
 const generateRandomString = () => {
   let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
-  return randomOutput.substring(2, 7); //Returns five characters from the middle of the string for increased randomization
+  return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
 };
 
 const bodyParser = require("body-parser");
@@ -65,18 +65,23 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:shortURL/edit', (req, res) => {
   let newURL = req.body.newURL;
   // Ensures paths to new websites are absolute rather than relative
-  if (newURL.substring(0,6) !== "http://" || newURL.substring(0,7) !== "https://") {
+  console.log(newURL.substring(0,7))
+  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
     newURL = "http://" + newURL;
-  }
+  } 
   urlDatabase[req.params.shortURL] = newURL;
   res.redirect(302, '/urls');
 });
 
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  let newURL = req.body.longURL
+  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
+    newURL = "http://" + newURL;
+  } 
+  urlDatabase[shortURL] = newURL;
 
-  res.send('ok');
+  res.redirect(302, '/urls');
 });
 
 app.post('/login', (req, res) => {
