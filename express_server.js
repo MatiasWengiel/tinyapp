@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
 const cookieParser = require('cookie-parser');
-app.use(cookieParser())
+app.use(cookieParser());
 
 const urlDatabase = {
   'b2xVn2': "http://www.lighthouselabs.ca",
@@ -65,20 +65,20 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 app.post('/urls/:shortURL/edit', (req, res) => {
   let newURL = req.body.newURL;
   // Ensures paths to new websites are absolute rather than relative
-  console.log(newURL.substring(0,7))
+  console.log(newURL.substring(0,7));
   if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
     newURL = "http://" + newURL;
-  } 
+  }
   urlDatabase[req.params.shortURL] = newURL;
   res.redirect(302, '/urls');
 });
 
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
-  let newURL = req.body.longURL
+  let newURL = req.body.longURL;
   if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
     newURL = "http://" + newURL;
-  } 
+  }
   urlDatabase[shortURL] = newURL;
 
   res.redirect(302, '/urls');
@@ -91,8 +91,8 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie('username');
-  res.redirect(302, '/urls')
-})
+  res.redirect(302, '/urls');
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
