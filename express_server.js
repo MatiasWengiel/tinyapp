@@ -2,11 +2,6 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 
-const generateRandomString = () => {
-  let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
-  return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
-};
-
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -15,10 +10,36 @@ app.set('view engine', 'ejs');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const generateRandomString = () => {
+  let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
+  return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
+};
+
 const urlDatabase = {
   'b2xVn2': "http://www.lighthouselabs.ca",
   '9sm5xK': 'http://www.google.ca'
 };
+
+const users = {
+  'sampleUser': {
+    id: 'userRandomID',
+    email: 'user@example.com',
+    password: 'user-defined-password'
+  }
+}
+
+app.post('/register', (req, res) => {
+  const id = generateRandomString()
+  users[id] = {
+    id,
+    email: req.body.email,
+    password: req.body.password
+  }
+
+  console.log(users)
+  res.cookie('username', id);
+  res.redirect(302, '/urls');
+})
 
 app.get('/', (req, res) => {
   res.send('Hello!');
