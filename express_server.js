@@ -16,10 +16,11 @@ const generateRandomString = () => {
   return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
 };
 
-const checkEmailExists = (newEmail) => {
+//Checks an email exists and returns ID if possible and false if the email does not exist
+const checkIDViaEmail = (newEmail) => {
   for (const user in users) {
     if (users[user].email === newEmail) {
-      return true
+      return user
     }
   }
   return false
@@ -143,7 +144,7 @@ app.post('/register', (req, res) => {
     res.status(400).render('register', templateVars);
   }
 
-  if (checkEmailExists(email)) {
+  if (checkIDViaEmail(email)) {
     const templateVars = {
       existingEmail: true,
       incorrectForm: false,
@@ -164,7 +165,19 @@ app.post('/register', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-  res.redirect(302, '/urls')
+  const email = req.body.email;
+  const password = req.body.password;
+  //Will have the user_id of an existing email, or false otherwise
+  const existingEmail = checkIDViaEmail(email);
+
+  if (existingEmail) {
+    if (users[existingEmail].password === password) {
+      res.cookie('user_id', existingEmail)
+      res.redirect(302, '/urls')
+    }
+    res.status(403).send('Invalid Password, return to <a href="/login">login page<a>');
+  }
+  res.status(403).send('Email cannot be found, do you want to <a href="/register">register<a> or return to the <a href="/login"> log in page? <a>')
 });
 
 app.post('/logout', (req, res) => {
