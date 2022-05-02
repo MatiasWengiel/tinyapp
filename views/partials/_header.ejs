@@ -17,11 +17,8 @@
               <button class="btn nav-item btn-success" type="submit">Log Out</button>
             </form>
             <% } else { %>
-          <form class="form-inline" action="/login" method="POST" >
-            <label class="nav-item nav-link" for="user_id">Log in:</label>
-            <input class="" type="text" name="user_id" placeholder="Your Email Here">
-            <button class="btn btn-success" type="submit">Submit</button>
-          </form>
+              <a class="nav-item nav-link" href="/register">New user? Register here</a>
+              <a class="nav-item nav-link" href="/login">Existing user? Log in here</a>
           <% } %>
     </div>
   </nav>

@@ -10,11 +10,22 @@ app.set('view engine', 'ejs');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+//HELPER FUNCTIONS
 const generateRandomString = () => {
   let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
   return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
 };
 
+const checkEmailExists = (newEmail) => {
+  for (const user in users) {
+    if (users[user].email === newEmail) {
+      return true
+    }
+  }
+  return false
+}
+
+//DATABASES
 const urlDatabase = {
   'b2xVn2': "http://www.lighthouselabs.ca",
   '9sm5xK': 'http://www.google.ca'
@@ -28,7 +39,7 @@ const users = {
   }
 }
 
-
+//GET REQUESTS
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -83,6 +94,14 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars)
 })
 
+app.get('/login', (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["user_id"]] 
+  }
+  res.render('login', templateVars)
+})
+
+//POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect(302, "/urls");
@@ -110,14 +129,6 @@ app.post('/urls', (req, res) => {
   res.redirect(302, '/urls');
 });
 
-const checkEmailExists = (newEmail) => {
-  for (const user in users) {
-    if (users[user].email === newEmail) {
-      return true
-    }
-  }
-  return false
-}
 app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
@@ -153,8 +164,7 @@ app.post('/register', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-  res.cookie('user_id', req.body[user_id]);
-  res.redirect(302, '/urls');
+  res.redirect(302, '/urls')
 });
 
 app.post('/logout', (req, res) => {
