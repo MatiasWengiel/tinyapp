@@ -107,14 +107,33 @@ app.post('/urls', (req, res) => {
   res.redirect(302, '/urls');
 });
 
+const checkEmailExists = (newEmail) => {
+  for (const user in users) {
+    if (users[user].email === newEmail) {
+      return true
+    }
+  }
+  return false
+}
 app.post('/register', (req, res) => {
-  const id = generateRandomString()
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    res.status(400).send('<h1>Your email or password fields were blank. Please click <a href="/register">here</a> to return to the registration page </h1>')
+  }
+
+  if (checkEmailExists(email)) {
+    res.status(400).send('<h1>Your email is already registered with our services. Please click <a href="/register">here</a> to return to the registration page and try again with a different email address </h1>')
+  }
+
   users[id] = {
     id,
-    email: req.body.email,
-    password: req.body.password
+    email,
+    password
   }
-  
+  console.log(users)
   res.cookie('user_id', id);
   res.redirect(302, '/urls');
 })
