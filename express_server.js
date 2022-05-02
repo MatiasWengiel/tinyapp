@@ -74,7 +74,10 @@ app.get('/u/:shortURL', (req, res) => {
 
 app.get('/register', (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]] 
+    user: users[req.cookies["user_id"]],
+    //Next two variables are used for user alert in case of incomplete submission or existing email
+    incorrectForm: false,
+    existingEmail:false
   };
 
   res.render('register', templateVars)
@@ -121,11 +124,22 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
 
   if (!email || !password) {
-    res.status(400).send('<h1>Your email or password fields were blank. Please click <a href="/register">here</a> to return to the registration page </h1>')
+    const templateVars = {
+      incorrectForm: true,
+      existingEmail: false,
+      user: users[req.cookies["user_id"]]
+    }
+    res.status(400).render('register', templateVars);
   }
 
   if (checkEmailExists(email)) {
-    res.status(400).send('<h1>Your email is already registered with our services. Please click <a href="/register">here</a> to return to the registration page and try again with a different email address </h1>')
+    const templateVars = {
+      existingEmail: true,
+      incorrectForm: false,
+      user: users[req.cookies["user_id"]]
+    }
+
+    res.status(400).render('register', templateVars)
   }
 
   users[id] = {
@@ -133,7 +147,7 @@ app.post('/register', (req, res) => {
     email,
     password
   }
-  console.log(users)
+
   res.cookie('user_id', id);
   res.redirect(302, '/urls');
 })

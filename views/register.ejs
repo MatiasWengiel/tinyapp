@@ -18,6 +18,16 @@
 
     <main style="margin: 1em;">
       <h3>User Registration Form</h3>
+      <% if (incorrectForm) { %>
+        <div class="alert alert-danger" role="alert">
+          Your email or password fields cannot be left blank
+        </div>
+      <% } %>
+      <% if (existingEmail) { %>
+        <div class="alert alert-danger" role="alert">
+          The email you provided is already registered with our service. Please visit <a href="login">our login page</a>, or try again
+        </div>
+      <% } %>
       <form class="form-inline" action="/register" method="POST">
         <div class="form-group mb-2">
           <label for="email">Please enter your email</label>
