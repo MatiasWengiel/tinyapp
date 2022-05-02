@@ -42,23 +42,32 @@ app.get('/urls/:shortURL', (req, res) => {
     longURL: urlDatabase[shortURL],
     username: req.cookies["username"]
   };
-
+  //Ensures the shortURL exists if typed by user
   templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.render('urls_index', templateVars);
 
 });
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
-});
-
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(302, longURL);
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL]
+  const templateVars = {
+    shortURL,
+    longURL,
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+
+  //Ensures the shortURL exists if typed by user
+  templateVars.urls[shortURL] ? res.redirect(302, longURL) : res.render('urls_index', templateVars);
 });
+
+app.get('/register', (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+
+  res.render('register', templateVars)
+})
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
@@ -67,8 +76,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 app.post('/urls/:shortURL/edit', (req, res) => {
   let newURL = req.body.newURL;
+
   // Ensures paths to new websites are absolute rather than relative
-  console.log(newURL.substring(0,7));
   if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
     newURL = "http://" + newURL;
   }
