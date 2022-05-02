@@ -97,7 +97,9 @@ app.get('/register', (req, res) => {
 
 app.get('/login', (req, res) => {
   const templateVars = {
-    user: users[req.cookies["user_id"]] 
+    user: users[req.cookies["user_id"]],
+    incorrectPassword: false,
+    emailDoesNotExist: false 
   }
   res.render('login', templateVars)
 })
@@ -135,6 +137,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+//Checks to ensure the email and password fields are not blank. If they are, returns the register page with an alert banner
   if (!email || !password) {
     const templateVars = {
       incorrectForm: true,
@@ -144,6 +147,7 @@ app.post('/register', (req, res) => {
     res.status(400).render('register', templateVars);
   }
 
+//Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
   if (checkIDViaEmail(email)) {
     const templateVars = {
       existingEmail: true,
@@ -171,13 +175,28 @@ app.post('/login', (req, res) => {
   const existingEmail = checkIDViaEmail(email);
 
   if (existingEmail) {
+
     if (users[existingEmail].password === password) {
       res.cookie('user_id', existingEmail)
       res.redirect(302, '/urls')
+      }
+
+    const templateVars = {
+      user: users[req.cookies["user_id"]],
+      incorrectPassword: true,
+      emailDoesNotExist: false
     }
-    res.status(403).send('Invalid Password, return to <a href="/login">login page<a>');
+    res.status(403).render('login', templateVars);
   }
-  res.status(403).send('Email cannot be found, do you want to <a href="/register">register<a> or return to the <a href="/login"> log in page? <a>')
+
+  templateVars = {
+    user: users[req.cookies["user_id"]],
+    emailDoesNotExist: true,
+    incorrectPassword: false
+  }
+  
+  res.status(403).render('login', templateVars)
+
 });
 
 app.post('/logout', (req, res) => {
