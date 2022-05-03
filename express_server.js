@@ -1,3 +1,4 @@
+//SERVER SETUP AND MIDDLEWARE
 const express = require('express');
 const app = express();
 const PORT = 8080;
@@ -16,15 +17,23 @@ const generateRandomString = () => {
   return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
 };
 
+const checkAbsoluteRoute = (newURL) => {
+  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
+    return newURL = "http://" + newURL;
+  }
+  return newURL;
+};
+
 //Checks an email exists and returns ID if possible and false if the email does not exist
 const checkIDViaEmail = (newEmail) => {
   for (const user in users) {
     if (users[user].email === newEmail) {
-      return user
+      return user;
     }
   }
-  return false
-}
+  return false;
+};
+
 
 //DATABASES
 const urlDatabase = {
@@ -38,11 +47,11 @@ const users = {
     email: 'user@example.com',
     password: 'user-defined-password'
   }
-}
+};
 
 //GET REQUESTS
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  res.redirect(302, '/urls');
 });
 
 app.get('/urls', (req, res) => {
@@ -58,30 +67,30 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const shortURL = req.params.shortURL
+  const shortURL = req.params.shortURL;
   const templateVars = {
     shortURL,
     urls: urlDatabase,
     longURL: urlDatabase[shortURL],
-    user: users[req.cookies["user_id"]] 
+    user: users[req.cookies["user_id"]]
   };
-  //Ensures the shortURL exists if typed by user
-  templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.render('urls_index', templateVars);
+
+  //Ensures the shortURL exists if typed by user and redirects to /urls if not
+  templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
 
 });
 
 app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL]
+  const longURL = urlDatabase[shortURL];
   const templateVars = {
     shortURL,
     longURL,
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]] 
   };
 
-  //Ensures the shortURL exists if typed by user
-  templateVars.urls[shortURL] ? res.redirect(302, longURL) : res.render('urls_index', templateVars);
+  //Ensures the shortURL exists if typed by user and redirects to /urls if not
+  templateVars.urls[shortURL] ? res.redirect(302, longURL) : res.redirect(302, '/urls');
 });
 
 app.get('/register', (req, res) => {
@@ -92,17 +101,18 @@ app.get('/register', (req, res) => {
     existingEmail:false
   };
 
-  res.render('register', templateVars)
-})
+  res.render('register', templateVars);
+});
 
 app.get('/login', (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
+    //Parameters below required for error handling (see login POST request)
     incorrectPassword: false,
-    emailDoesNotExist: false 
-  }
-  res.render('login', templateVars)
-})
+    emailDoesNotExist: false
+  };
+  res.render('login', templateVars);
+});
 
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
@@ -111,22 +121,18 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  let newURL = req.body.newURL;
+  //Ensures paths to new websites are absolute rather than relative
+  const newURL = checkAbsoluteRoute(req.body.newURL);
 
-  // Ensures paths to new websites are absolute rather than relative
-  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
-    newURL = "http://" + newURL;
-  }
   urlDatabase[req.params.shortURL] = newURL;
   res.redirect(302, '/urls');
 });
 
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
-  let newURL = req.body.longURL;
-  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
-    newURL = "http://" + newURL;
-  }
+  // Ensures paths to new websites are absolute rather than relative
+  const newURL = checkAbsoluteRoute(req.body.longURL);
+
   urlDatabase[shortURL] = newURL;
 
   res.redirect(302, '/urls');
@@ -137,36 +143,36 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-//Checks to ensure the email and password fields are not blank. If they are, returns the register page with an alert banner
+  //Checks to ensure the email and password fields are not blank. If they are, returns the register page with an alert banner
   if (!email || !password) {
     const templateVars = {
       incorrectForm: true,
       existingEmail: false,
       user: users[req.cookies["user_id"]]
-    }
+    };
     res.status(400).render('register', templateVars);
   }
 
-//Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
+  //Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
   if (checkIDViaEmail(email)) {
     const templateVars = {
       existingEmail: true,
       incorrectForm: false,
       user: users[req.cookies["user_id"]]
-    }
+    };
 
-    res.status(400).render('register', templateVars)
+    res.status(400).render('register', templateVars);
   }
-
+  //If checks pass, creates a new user with a randomly generated ID and the provided email and password, then sets a cookie on the client's browser with the user_id
   users[id] = {
     id,
     email,
     password
-  }
+  };
 
   res.cookie('user_id', id);
   res.redirect(302, '/urls');
-})
+});
 
 app.post('/login', (req, res) => {
   const email = req.body.email;
@@ -175,27 +181,27 @@ app.post('/login', (req, res) => {
   const existingEmail = checkIDViaEmail(email);
 
   if (existingEmail) {
-
+    //Logs in if password correct
     if (users[existingEmail].password === password) {
-      res.cookie('user_id', existingEmail)
-      res.redirect(302, '/urls')
-      }
-
+      res.cookie('user_id', existingEmail);
+      res.redirect(302, '/urls');
+    }
+    //Renders login page with incorrect password error if password is incorrect
     const templateVars = {
       user: users[req.cookies["user_id"]],
       incorrectPassword: true,
       emailDoesNotExist: false
-    }
+    };
     res.status(403).render('login', templateVars);
   }
-
-  templateVars = {
+  //Renders the login page with non-existing email error
+  const templateVars = {
     user: users[req.cookies["user_id"]],
     emailDoesNotExist: true,
     incorrectPassword: false
-  }
-  
-  res.status(403).render('login', templateVars)
+  };
+
+  res.status(403).render('login', templateVars);
 
 });
 
