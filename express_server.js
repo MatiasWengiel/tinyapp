@@ -61,11 +61,15 @@ app.get('/urls', (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]]  };
+  const templateVars = {
+    user: users[req.cookies["user_id"]],
+    incorrectPasswordOrEmail: false,
+   errorLoginNeeded: true  
+};
   if (templateVars.user) {
     res.render("urls_new", templateVars);
   }
-  res.status(400).send("You must be logged in to create a new URL. Would you like to <a href='/login'>log in</a> or <a href='register'>register</a> a new account?")
+  res.status(400).render('login', templateVars)
   
 });
 
@@ -111,7 +115,8 @@ app.get('/login', (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     //Parameters below required for error handling (see login POST request)
-    incorrectPasswordOrEmail: false
+    incorrectPasswordOrEmail: false,
+    errorLoginNeeded: false
   };
   res.render('login', templateVars);
 });
@@ -188,17 +193,19 @@ app.post('/login', (req, res) => {
       res.cookie('user_id', existingEmail);
       res.redirect(302, '/urls');
     }
-    //Renders login page with incorrect password error if password is incorrect
+    //Renders login page with incorrect password or email error if password is incorrect
     const templateVars = {
       user: users[req.cookies["user_id"]],
       incorrectPasswordOrEmail: true,
+      errorLoginNeeded: false
     };
     res.status(403).render('login', templateVars);
   }
-  //Renders the login page with non-existing email error
-  const templateVars = {
+  //Renders the login page with incorrect password or email error if email does not exist
+    const templateVars = {
     user: users[req.cookies["user_id"]],
     incorrectPasswordOrEmail: true,
+    errorLoginNeeded: false
   };
 
   res.status(403).render('login', templateVars);
