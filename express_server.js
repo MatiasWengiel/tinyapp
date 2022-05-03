@@ -37,15 +37,21 @@ const getUserByEmail = (newEmail) => {
 
 //DATABASES
 const urlDatabase = {
-  'b2xVn2': "http://www.lighthouselabs.ca",
-  '9sm5xK': 'http://www.google.ca'
+  'b2xVn2': {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: 'sampleUser'
+  },
+  '9sm5xK': {
+    longURL: 'http://www.google.ca',
+    userID: 'sampleUser'
+  } 
 };
 
 const users = {
   'sampleUser': {
-    id: 'userRandomID',
-    email: 'user@example.com',
-    password: 'user-defined-password'
+    id: 'sampleUser',
+    email: 'a@a',
+    password: 'a'
   }
 };
 
@@ -55,7 +61,21 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const templateVars = {urls: urlDatabase, user: users[req.cookies["user_id"]] };
+  const userID = req.cookies["user_id"]
+  
+  const sortLinksByUser = (userID) => {
+    let userURLs = {}
+    for (const shortURL in urlDatabase) {
+      if (urlDatabase[shortURL].userID === userID) {
+        
+        userURLs[shortURL] = { [shortURL]: urlDatabase[shortURL].longURL }
+      }
+    }
+    return userURLs
+  }
+  const urls = sortLinksByUser(userID)
+  console.log("urls object", urls)
+  const templateVars = {urls, user: users[req.cookies["user_id"]] };
 
   res.render("urls_index", templateVars);
 });
@@ -151,7 +171,7 @@ app.post('/urls', (req, res) => {
 
   res.redirect(302, '/urls');
   }
-  
+
   res.status(400).render('login', templateVars)
   
   
