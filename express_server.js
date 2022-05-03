@@ -64,7 +64,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     incorrectPasswordOrEmail: false,
-   errorLoginNeeded: true  
+    errorLoginNeeded: true  
 };
   if (templateVars.user) {
     res.render("urls_new", templateVars);
@@ -136,13 +136,25 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  const shortURL = generateRandomString();
+
+  const templateVars = {
+    user: users[req.cookies["user_id"]],
+    incorrectPasswordOrEmail: false,
+    errorLoginNeeded: true  
+};
+  if (templateVars.user) {
+    const shortURL = generateRandomString();
   // Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.longURL);
 
   urlDatabase[shortURL] = newURL;
 
   res.redirect(302, '/urls');
+  }
+  
+  res.status(400).render('login', templateVars)
+  
+  
 });
 
 app.post('/register', (req, res) => {
