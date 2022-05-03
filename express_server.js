@@ -25,7 +25,7 @@ const checkAbsoluteRoute = (newURL) => {
 };
 
 //Checks an email exists and returns ID if possible and false if the email does not exist
-const checkIDViaEmail = (newEmail) => {
+const getUserByEmail = (newEmail) => {
   for (const user in users) {
     if (users[user].email === newEmail) {
       return user;
@@ -154,7 +154,7 @@ app.post('/register', (req, res) => {
   }
 
   //Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
-  if (checkIDViaEmail(email)) {
+  if (getUserByEmail(email)) {
     const templateVars = {
       existingEmail: true,
       incorrectForm: false,
@@ -178,7 +178,7 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   //Will have the user_id of an existing email, or false otherwise
-  const existingEmail = checkIDViaEmail(email);
+  const existingEmail = getUserByEmail(email);
 
   if (existingEmail) {
     //Logs in if password correct
