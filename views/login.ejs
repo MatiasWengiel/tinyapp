@@ -18,14 +18,9 @@
 
     <main style="margin: 1em;">
       <h3>You can log in to TinyApp below:</h3>
-      <% if (incorrectPassword) { %>
+      <% if (incorrectPasswordOrEmail) { %>
         <div class="alert alert-danger" role="alert">
-          The password you entered is incorrect. Please try again.
-        </div>
-      <% } %>
-      <% if (emailDoesNotExist) { %>
-        <div class="alert alert-danger" role="alert">
-          The email you entered is not registered with your service. Would you like to visit our <a href="/register"> registration page</a>?
+          The password you entered is incorrect, or the email is not registered. Would you like to <a href="register">register</a> instead?
         </div>
       <% } %>
       <form class="form-inline" action="/login" method="POST">
