@@ -146,10 +146,17 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["user_id"]]
+  }
   //Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.newURL);
 
-  urlDatabase[req.params.shortURL] = newURL;
+  urlDatabase[req.params.shortURL] = {
+    longURL: newURL,
+    userID: templateVars.user.id
+  }
+  console.log(urlDatabase)
   res.redirect(302, '/urls');
 });
 
@@ -160,7 +167,7 @@ app.post('/urls', (req, res) => {
     incorrectPasswordOrEmail: false,
     errorLoginNeeded: true
   };
-  
+
   if (templateVars.user) {
     const shortURL = generateRandomString();
     // Ensures paths to new websites are absolute rather than relative
