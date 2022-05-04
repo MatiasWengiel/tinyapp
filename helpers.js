@@ -21,13 +21,15 @@ const getUserIDByEmail = (email, database) => {
   return false;
 };
 
-const confirmUserLoggedIn = (user, res, templateVars) => {
-  templateVars.incorrectPasswordOrEmail = false
-  templateVars.errorLoginNeeded = true
+
+const confirmUserLoggedIn = (user, res, templateVars, url) => {
+  templateVars.incorrectPasswordOrEmail = false;
+  templateVars.errorLoginNeeded = true;
   if (!user) {
-   return res.status(400).render('login', templateVars);
+    return res.status(400).render('login', templateVars);
   }
-}
+  return url ? res.render(url, templateVars) : null;
+};
 
 
 //Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
@@ -47,4 +49,4 @@ module.exports = {
   getUserIDByEmail,
   confirmUserLoggedIn,
   sortLinksByUserID
-}
+};
