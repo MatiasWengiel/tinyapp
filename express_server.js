@@ -93,11 +93,12 @@ app.get("/urls/new", (req, res) => {
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
+  const user = users[req.cookies["user_id"]]
   const templateVars = {
     shortURL,
+    user,
     urls: urlDatabase,
-    longURL: urlDatabase[shortURL],
-    user: users[req.cookies["user_id"]]
+    longURL: urlDatabase[shortURL].longURL
   };
 
   //Ensures the shortURL exists if typed by user and redirects to /urls if not
@@ -146,15 +147,13 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  const templateVars = {
-    user: users[req.cookies["user_id"]]
-  }
+  const user = users[req.cookies["user_id"]]
   //Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.newURL);
 
   urlDatabase[req.params.shortURL] = {
     longURL: newURL,
-    userID: templateVars.user.id
+    userID: user.id
   }
   console.log(urlDatabase)
   res.redirect(302, '/urls');
