@@ -33,6 +33,15 @@ const getUserByEmail = (newEmail) => {
   }
   return false;
 };
+
+const confirmUserLoggedIn = (user, res, templateVars) => {
+  templateVars.incorrectPasswordOrEmail = false
+  templateVars.errorLoginNeeded = true
+  if (!user) {
+   return res.status(400).render('login', templateVars);
+  }
+}
+
 //Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
 const sortLinksByUser = (userID) => {
   let userURLs = {};
@@ -71,35 +80,37 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const userID = req.cookies["user_id"];
-  const urls = sortLinksByUser(userID);
+  const user = req.cookies["user_id"];
+  const urls = sortLinksByUser(user);
   const templateVars = {urls, user: users[req.cookies["user_id"]] };
+
+  confirmUserLoggedIn(user, res, templateVars)
 
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   const templateVars = {
-    user: users[req.cookies["user_id"]],
-    incorrectPasswordOrEmail: false,
-    errorLoginNeeded: true
+    user
   };
-  if (templateVars.user) {
-    res.render("urls_new", templateVars);
-  }
-  res.status(400).render('login', templateVars);
-  
+
+  confirmUserLoggedIn(user, res, templateVars)
+
+  res.render("urls_new", templateVars);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.cookies["user_id"]];
   const templateVars = {
     shortURL,
     user,
     urls: urlDatabase,
-    longURL: urlDatabase[shortURL].longURL
+    longURL: urlDatabase[shortURL].longURL,
   };
+
+  confirmUserLoggedIn(user, res, templateVars)
 
   //Ensures the shortURL exists if typed by user and redirects to /urls if not
   templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
@@ -120,42 +131,61 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
+  const user = users[req.cookies["user_id"]]
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user,
     //Next two variables are used for user alert in case of incomplete submission or existing email
     incorrectForm: false,
     existingEmail:false
   };
 
+  if (user) {
+    res.redirect(302, '/urls')
+  }
   res.render('register', templateVars);
+  
 });
 
 app.get('/login', (req, res) => {
+  const user = users[req.cookies["user_id"]];
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user,
     //Parameters below required for error handling (see login POST request)
     incorrectPasswordOrEmail: false,
     errorLoginNeeded: false
   };
+  if (user) {
+    res.redirect(302, '/urls')
+  }
   res.render('login', templateVars);
 });
 
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  const user = users[req.cookies["user_id"]];
+  const shortURL = [req.params.shortURL];
+  const templateVars = { user, shortURL}
+
+  confirmUserLoggedIn(user, res, templateVars)
+
+  delete urlDatabase[shortURL];
   res.redirect(302, "/urls");
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.cookies["user_id"]];
   //Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.newURL);
+  const shortURL = [req.params.shortURL];
 
-  urlDatabase[req.params.shortURL] = {
+  const templateVars = { user, shortURL}
+
+  confirmUserLoggedIn(user, res, templateVars)
+
+  urlDatabase[shortURL] = {
     longURL: newURL,
     userID: user.id
-  }
-  console.log(urlDatabase)
+  };
   res.redirect(302, '/urls');
 });
 
@@ -175,8 +205,8 @@ app.post('/urls', (req, res) => {
     urlDatabase[shortURL] = {
       longURL: newURL,
       userID: templateVars.user.id
-    }
-    console.log(urlDatabase[shortURL])
+    };
+    console.log(urlDatabase[shortURL]);
     res.redirect(302, '/urls');
   }
 

@@ -20,12 +20,12 @@
       <h3>You can log in to TinyApp below:</h3>
       <% if (incorrectPasswordOrEmail) { %>
         <div class="alert alert-danger" role="alert">
-          The password you entered is incorrect, or the email is not registered. Would you like to <a href="register">register</a> instead?
+          The password you entered is incorrect, or the email is not registered. Would you like to <a href="/register">register</a> instead?
         </div>
       <% } %>
       <% if (errorLoginNeeded) { %>
         <div class="alert alert-danger" role="alert">
-          Only registered users may create or modify short URLs. Would you like to <a href="register">register</a> instead?
+          Only registered users may create or modify short URLs. Would you like to <a href="/register">register</a> instead?
         </div>
       <% } %>
       <form class="form-inline" action="/login" method="POST">
