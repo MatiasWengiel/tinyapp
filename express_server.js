@@ -18,47 +18,14 @@ app.use(cookieSession({
 const bcrypt = require('bcryptjs')
 
 //HELPER FUNCTIONS
-const generateRandomString = () => {
-  let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
-  return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
-};
+const {
+  generateRandomString,
+  checkAbsoluteRoute,
+  getUserIDByEmail,
+  confirmUserLoggedIn,
+  sortLinksByUserID
+} = require('./helpers')
 
-const checkAbsoluteRoute = (newURL) => {
-  if (newURL.substring(0,7) !== "http://" && newURL.substring(0,8) !== "https://") {
-    return newURL = "http://" + newURL;
-  }
-  return newURL;
-};
-
-//Checks an email exists and returns ID if possible and false if the email does not exist
-const getUserIDByEmail = (email, database) => {
-  for (const user in database) {
-    if (database[user].email === email) {
-      return user;
-    }
-  }
-  return false;
-};
-/* Temporarily stopped work on this self-directed stretch goal to ensure I have time to get to all the core work
-const confirmUserLoggedIn = (user, res, templateVars) => {
-  templateVars.incorrectPasswordOrEmail = false
-  templateVars.errorLoginNeeded = true
-  if (!user) {
-   return res.status(400).render('login', templateVars);
-  }
-}
-*/
-
-//Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
-const sortLinksByUserID = (userID) => {
-  let userURLs = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === userID) {
-      userURLs[shortURL] = { [shortURL]: urlDatabase[shortURL].longURL };
-    }
-  }
-  return userURLs;
-};
 
 //DATABASES
 const urlDatabase = {
@@ -87,14 +54,21 @@ app.get('/', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const userID = req.session.user_id
-  const urls = sortLinksByUserID(userID);
+  const urls = sortLinksByUserID(userID, urlDatabase);
   const user = users[userID]
   const templateVars = { urls, user };
+  //const resolve = res.render("urls_index", templateVars)
   //confirmUserLoggedIn(user, res, templateVars)
-  if(!user) {
-    return res.status(400).send("<h1>You must be logged in to see your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
-  }
 
+  if (!user) {
+  templateVars.incorrectPasswordOrEmail = false
+  templateVars.errorLoginNeeded = true
+    return res.status(400).render('login', templateVars);
+   }
+   
+  // if(!user) {
+  //   return res.status(400).send("<h1>You must be logged in to see your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  // }
   res.render("urls_index", templateVars);
 });
 
@@ -180,7 +154,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   //const templateVars = { user, shortURL}
 
-  const userLinks = sortLinksByUserID(req.session.user_id)
+  const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase)
   if(!user) {
     return res.status(400).send("<h1>You must be logged in to delete your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
   }
@@ -215,7 +189,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   }
 
     // Ensures only users with the right permissions can edit urls
-    const userLinks = sortLinksByUserID(req.session.user_id)
+    const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase)
     if(user) {
       for (const eachShortURL in userLinks) {
         if (eachShortURL === shortURL) {
