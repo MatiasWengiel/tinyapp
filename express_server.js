@@ -33,7 +33,7 @@ const getUserByEmail = (newEmail) => {
   }
   return false;
 };
-
+/* Temporarily stopped work on this self-directed stretch goal to ensure I have time to get to all the core work
 const confirmUserLoggedIn = (user, res, templateVars) => {
   templateVars.incorrectPasswordOrEmail = false
   templateVars.errorLoginNeeded = true
@@ -41,13 +41,13 @@ const confirmUserLoggedIn = (user, res, templateVars) => {
    return res.status(400).render('login', templateVars);
   }
 }
+*/
 
 //Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
 const sortLinksByUserID = (userID) => {
   let userURLs = {};
   for (const shortURL in urlDatabase) {
     if (urlDatabase[shortURL].userID === userID) {
-      
       userURLs[shortURL] = { [shortURL]: urlDatabase[shortURL].longURL };
     }
   }
@@ -82,9 +82,12 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   const userID = req.cookies["user_id"];
   const urls = sortLinksByUserID(userID);
-  const templateVars = {urls, user: users[req.cookies["user_id"]] };
-
-  confirmUserLoggedIn(user, res, templateVars)
+  const user = users[userID]
+  const templateVars = { urls, user };
+  //confirmUserLoggedIn(user, res, templateVars)
+  if(!user) {
+    return res.status(400).send("<h1>You must be logged in to see your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  }
 
   res.render("urls_index", templateVars);
 });
@@ -95,7 +98,10 @@ app.get("/urls/new", (req, res) => {
     user
   };
 
-  confirmUserLoggedIn(user, res, templateVars)
+  //confirmUserLoggedIn(user, res, templateVars)
+  if(!user) {
+    return res.status(400).send("<h1>You must be logged in to create new URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  }
 
   res.render("urls_new", templateVars);
 });
@@ -109,8 +115,10 @@ app.get('/urls/:shortURL', (req, res) => {
     urls: urlDatabase,
     longURL: urlDatabase[shortURL].longURL,
   };
-
-  confirmUserLoggedIn(user, res, templateVars)
+  if(!user) {
+    return res.status(400).send("<h1>You must be logged in to see this URL. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  }
+  // confirmUserLoggedIn(user, res, templateVars)
 
   //Ensures the shortURL exists if typed by user and redirects to /urls if not
   templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
@@ -140,7 +148,7 @@ app.get('/register', (req, res) => {
   };
 
   if (user) {
-    res.redirect(302, '/urls')
+    return res.redirect(302, '/urls')
   }
   res.render('register', templateVars);
   
@@ -155,7 +163,7 @@ app.get('/login', (req, res) => {
     errorLoginNeeded: false
   };
   if (user) {
-    res.redirect(302, '/urls')
+    return res.redirect(302, '/urls')
   }
   res.render('login', templateVars);
 });
@@ -163,12 +171,27 @@ app.get('/login', (req, res) => {
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const user = users[req.cookies["user_id"]];
-  const shortURL = [req.params.shortURL];
-  const templateVars = { user, shortURL}
+  const shortURL = req.params.shortURL;
+  //const templateVars = { user, shortURL}
 
-  confirmUserLoggedIn(user, res, templateVars)
+  const userLinks = sortLinksByUserID(req.cookies["user_id"])
+  if(!user) {
+    return res.status(400).send("<h1>You must be logged in to delete your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  }
+  // confirmUserLoggedIn(user, res, templateVars)
 
-  delete urlDatabase[shortURL];
+  // Ensures only users with the right permissions can delete urls
+  if(user) {
+    for (const eachShortURL in userLinks) {
+      if (eachShortURL === shortURL) {
+        delete urlDatabase[shortURL]
+      }
+    }
+  } else {
+    return res.status(400).send('<h1>You do not have permission to delete that URL</h1>')
+  }
+
+
   res.redirect(302, "/urls");
 });
 
@@ -176,41 +199,50 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const user = users[req.cookies["user_id"]];
   //Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.newURL);
-  const shortURL = [req.params.shortURL];
+  const shortURL = req.params.shortURL;
 
   const templateVars = { user, shortURL}
 
-  confirmUserLoggedIn(user, res, templateVars)
+  //confirmUserLoggedIn(user, res, templateVars)
+  if(!user) {
+    return res.status(400).send("<h1>You must be logged in to edit your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
+  }
 
-  urlDatabase[shortURL] = {
-    longURL: newURL,
-    userID: user.id
-  };
+    // Ensures only users with the right permissions can edit urls
+    const userLinks = sortLinksByUserID(req.cookies["user_id"])
+    if(user) {
+      for (const eachShortURL in userLinks) {
+        if (eachShortURL === shortURL) {
+          urlDatabase[shortURL] = {
+            longURL: newURL,
+            userID: user.id
+          };
+        }
+      }
+    } else {
+      return res.status(400).send('<h1>You do not have permission to delete that URL</h1>')
+    }
+
   res.redirect(302, '/urls');
 });
 
 app.post('/urls', (req, res) => {
+  const user = users[req.cookies["user_id"]]
+  //const templateVars = { user };
 
-  const templateVars = {
-    user: users[req.cookies["user_id"]],
-    incorrectPasswordOrEmail: false,
-    errorLoginNeeded: true
-  };
-
-  if (templateVars.user) {
+  if (user) {
     const shortURL = generateRandomString();
     // Ensures paths to new websites are absolute rather than relative
     const newURL = checkAbsoluteRoute(req.body.longURL);
 
     urlDatabase[shortURL] = {
       longURL: newURL,
-      userID: templateVars.user.id
+      userID: req.cookies["user_id"]
     };
-    console.log(urlDatabase[shortURL]);
-    res.redirect(302, '/urls');
+    return res.redirect(302, '/urls');
   }
 
-  res.status(400).render('login', templateVars);
+  return res.status(400).send("<h1>You must be logged in to create new URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?");
   
   
 });
@@ -261,7 +293,7 @@ app.post('/login', (req, res) => {
     //Logs in if password correct
     if (users[existingEmail].password === password) {
       res.cookie('user_id', existingEmail);
-      res.redirect(302, '/urls');
+      return res.redirect(302, '/urls');
     }
     //Renders login page with incorrect password or email error if password is incorrect
     const templateVars = {
@@ -269,7 +301,7 @@ app.post('/login', (req, res) => {
       incorrectPasswordOrEmail: true,
       errorLoginNeeded: false
     };
-    res.status(403).render('login', templateVars);
+    return res.status(403).render('login', templateVars);
   }
   //Renders the login page with incorrect password or email error if email does not exist
   const templateVars = {
