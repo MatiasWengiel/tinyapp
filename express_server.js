@@ -62,7 +62,7 @@ app.get('/urls', (req, res) => {
   confirmUserLoggedIn(user, res, templateVars, url);
 
 
-  //res.render("urls_index", templateVars);
+
 });
 
 app.get("/urls/new", (req, res) => {
@@ -75,7 +75,7 @@ app.get("/urls/new", (req, res) => {
   confirmUserLoggedIn(user, res, templateVars, url);
 
 
-  //res.render("urls_new", templateVars);
+
 });
 
 app.get('/urls/:shortURL', (req, res) => {
@@ -92,9 +92,6 @@ app.get('/urls/:shortURL', (req, res) => {
   const url =   templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
 
   confirmUserLoggedIn(user, res, templateVars, url);
-
-
-  //templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
 
 });
 
@@ -174,10 +171,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const newURL = checkAbsoluteRoute(req.body.newURL);
   const shortURL = req.params.shortURL;
 
-  const templateVars = { user, shortURL};
-
-  const url = null;
-  confirmUserLoggedIn(user, res, templateVars, url);
+  //const templateVars = { user, shortURL};
 
   // Ensures only users with the right permissions can edit urls
   const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
@@ -214,7 +208,7 @@ app.post('/urls', (req, res) => {
     return res.redirect(302, '/urls');
   }
 
-  return res.status(400).send("<h1>You must be logged in to create new URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?");
+  return res.status(400).send("<h1>You must be logged in to create new URLs.</h1>");
   
   
 });
@@ -289,7 +283,7 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect(302, '/urls');
+  res.redirect(302, '/login');
 });
 
 app.listen(PORT, () => {
