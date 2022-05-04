@@ -11,6 +11,8 @@ app.set('view engine', 'ejs');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const bcrypt = require('bcryptjs')
+
 //HELPER FUNCTIONS
 const generateRandomString = () => {
   let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
