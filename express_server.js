@@ -33,7 +33,17 @@ const getUserByEmail = (newEmail) => {
   }
   return false;
 };
-
+//Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
+const sortLinksByUser = (userID) => {
+  let userURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === userID) {
+      
+      userURLs[shortURL] = { [shortURL]: urlDatabase[shortURL].longURL };
+    }
+  }
+  return userURLs;
+};
 
 //DATABASES
 const urlDatabase = {
@@ -44,7 +54,7 @@ const urlDatabase = {
   '9sm5xK': {
     longURL: 'http://www.google.ca',
     userID: 'sampleUser'
-  } 
+  }
 };
 
 const users = {
@@ -61,20 +71,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const userID = req.cookies["user_id"]
-  
-  const sortLinksByUser = (userID) => {
-    let userURLs = {}
-    for (const shortURL in urlDatabase) {
-      if (urlDatabase[shortURL].userID === userID) {
-        
-        userURLs[shortURL] = { [shortURL]: urlDatabase[shortURL].longURL }
-      }
-    }
-    return userURLs
-  }
-  const urls = sortLinksByUser(userID)
-  console.log("urls object", urls)
+  const userID = req.cookies["user_id"];
+  const urls = sortLinksByUser(userID);
   const templateVars = {urls, user: users[req.cookies["user_id"]] };
 
   res.render("urls_index", templateVars);
@@ -84,12 +82,12 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     incorrectPasswordOrEmail: false,
-    errorLoginNeeded: true  
-};
+    errorLoginNeeded: true
+  };
   if (templateVars.user) {
     res.render("urls_new", templateVars);
   }
-  res.status(400).render('login', templateVars)
+  res.status(400).render('login', templateVars);
   
 });
 
@@ -160,19 +158,23 @@ app.post('/urls', (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
     incorrectPasswordOrEmail: false,
-    errorLoginNeeded: true  
-};
+    errorLoginNeeded: true
+  };
+  
   if (templateVars.user) {
     const shortURL = generateRandomString();
-  // Ensures paths to new websites are absolute rather than relative
-  const newURL = checkAbsoluteRoute(req.body.longURL);
+    // Ensures paths to new websites are absolute rather than relative
+    const newURL = checkAbsoluteRoute(req.body.longURL);
 
-  urlDatabase[shortURL] = newURL;
-
-  res.redirect(302, '/urls');
+    urlDatabase[shortURL] = {
+      longURL: newURL,
+      userID: templateVars.user.id
+    }
+    console.log(urlDatabase[shortURL])
+    res.redirect(302, '/urls');
   }
 
-  res.status(400).render('login', templateVars)
+  res.status(400).render('login', templateVars);
   
   
 });
@@ -234,7 +236,7 @@ app.post('/login', (req, res) => {
     res.status(403).render('login', templateVars);
   }
   //Renders the login page with incorrect password or email error if email does not exist
-    const templateVars = {
+  const templateVars = {
     user: users[req.cookies["user_id"]],
     incorrectPasswordOrEmail: true,
     errorLoginNeeded: false
