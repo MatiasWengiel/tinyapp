@@ -43,7 +43,7 @@ const confirmUserLoggedIn = (user, res, templateVars) => {
 }
 
 //Sorts through the database (which has shortURL as keys) and returns all the shortURLs associated with the userID passed
-const sortLinksByUser = (userID) => {
+const sortLinksByUserID = (userID) => {
   let userURLs = {};
   for (const shortURL in urlDatabase) {
     if (urlDatabase[shortURL].userID === userID) {
@@ -80,8 +80,8 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const user = req.cookies["user_id"];
-  const urls = sortLinksByUser(user);
+  const userID = req.cookies["user_id"];
+  const urls = sortLinksByUserID(userID);
   const templateVars = {urls, user: users[req.cookies["user_id"]] };
 
   confirmUserLoggedIn(user, res, templateVars)
