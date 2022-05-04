@@ -8,9 +8,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set('view engine', 'ejs');
 
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
-
+// const cookieParser = require('cookie-parser');
+// app.use(cookieParser());
+const cookieSession = require('cookie-session')
+app.use(cookieSession({
+  name: 'session',
+  keys: ['th1sismysecretkeythatyouwillnevergue$s']
+}))
 const bcrypt = require('bcryptjs')
 
 //HELPER FUNCTIONS
@@ -27,9 +31,9 @@ const checkAbsoluteRoute = (newURL) => {
 };
 
 //Checks an email exists and returns ID if possible and false if the email does not exist
-const getUserByEmail = (newEmail) => {
-  for (const user in users) {
-    if (users[user].email === newEmail) {
+const getUserIDByEmail = (email, database) => {
+  for (const user in database) {
+    if (database[user].email === email) {
       return user;
     }
   }
@@ -82,7 +86,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id
   const urls = sortLinksByUserID(userID);
   const user = users[userID]
   const templateVars = { urls, user };
@@ -95,7 +99,7 @@ app.get('/urls', (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const templateVars = {
     user
   };
@@ -110,7 +114,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const templateVars = {
     shortURL,
     user,
@@ -141,7 +145,7 @@ app.get('/u/:shortURL', (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session.user_id]
   const templateVars = {
     user,
     //Next two variables are used for user alert in case of incomplete submission or existing email
@@ -157,7 +161,7 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const templateVars = {
     user,
     //Parameters below required for error handling (see login POST request)
@@ -172,11 +176,11 @@ app.get('/login', (req, res) => {
 
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
   //const templateVars = { user, shortURL}
 
-  const userLinks = sortLinksByUserID(req.cookies["user_id"])
+  const userLinks = sortLinksByUserID(req.session.user_id)
   if(!user) {
     return res.status(400).send("<h1>You must be logged in to delete your URLs. Would you like to <a href='/login'>log in</a> or <a href='/register'>register</a>?")
   }
@@ -198,7 +202,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   //Ensures paths to new websites are absolute rather than relative
   const newURL = checkAbsoluteRoute(req.body.newURL);
   const shortURL = req.params.shortURL;
@@ -211,7 +215,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   }
 
     // Ensures only users with the right permissions can edit urls
-    const userLinks = sortLinksByUserID(req.cookies["user_id"])
+    const userLinks = sortLinksByUserID(req.session.user_id)
     if(user) {
       for (const eachShortURL in userLinks) {
         if (eachShortURL === shortURL) {
@@ -229,7 +233,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  const user = users[req.cookies["user_id"]]
+  const user = users[req.session.user_id]
   //const templateVars = { user };
 
   if (user) {
@@ -239,7 +243,7 @@ app.post('/urls', (req, res) => {
 
     urlDatabase[shortURL] = {
       longURL: newURL,
-      userID: req.cookies["user_id"]
+      userID: req.session.user_id
     };
     return res.redirect(302, '/urls');
   }
@@ -260,17 +264,17 @@ app.post('/register', (req, res) => {
     const templateVars = {
       incorrectForm: true,
       existingEmail: false,
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     };
     res.status(400).render('register', templateVars);
   }
 
   //Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
-  if (getUserByEmail(email)) {
+  if (getUserIDByEmail(email, users)) {
     const templateVars = {
       existingEmail: true,
       incorrectForm: false,
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     };
 
     res.status(400).render('register', templateVars);
@@ -282,7 +286,7 @@ app.post('/register', (req, res) => {
     hashedPassword
   };
 
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect(302, '/urls');
 });
 
@@ -290,17 +294,17 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   //Will have the user_id of an existing email, or false otherwise
-  const existingEmail = getUserByEmail(email);
+  const existingEmail = getUserIDByEmail(email, users);
 
   if (existingEmail) {
     //Logs in if password correct
     if (bcrypt.compareSync(password, users[existingEmail].hashedPassword)) {
-      res.cookie('user_id', existingEmail);
+      req.session.user_id = existingEmail;
       return res.redirect(302, '/urls');
     }
     //Renders login page with incorrect password or email error if password is incorrect
     const templateVars = {
-      user: users[req.cookies["user_id"]],
+      user: users[req.session.user_id],
       incorrectPasswordOrEmail: true,
       errorLoginNeeded: false
     };
@@ -308,7 +312,7 @@ app.post('/login', (req, res) => {
   }
   //Renders the login page with incorrect password or email error if email does not exist
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
     incorrectPasswordOrEmail: true,
     errorLoginNeeded: false
   };
@@ -318,7 +322,7 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect(302, '/urls');
 });
 
