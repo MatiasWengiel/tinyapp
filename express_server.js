@@ -253,6 +253,7 @@ app.post('/register', (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   //Checks to ensure the email and password fields are not blank. If they are, returns the register page with an alert banner
   if (!email || !password) {
@@ -278,7 +279,7 @@ app.post('/register', (req, res) => {
   users[id] = {
     id,
     email,
-    password
+    hashedPassword
   };
 
   res.cookie('user_id', id);
@@ -293,7 +294,7 @@ app.post('/login', (req, res) => {
 
   if (existingEmail) {
     //Logs in if password correct
-    if (users[existingEmail].password === password) {
+    if (bcrypt.compareSync(password, users[existingEmail].hashedPassword)) {
       res.cookie('user_id', existingEmail);
       return res.redirect(302, '/urls');
     }
