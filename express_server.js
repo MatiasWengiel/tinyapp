@@ -17,19 +17,8 @@ app.use(cookieSession({
 
 const bcrypt = require('bcryptjs');
 
-// app.use((res, req, next) => {
-//   const userID = "sampleUser"
-//   const user = users[userID]
-//   const urls = sortLinksByUserID(userID, urlDatabase)
-//   res.locals = {
-//     //userID,
-//     user,
-//    // urls
-//   }
-//   next()
-// })
-
 //HELPER FUNCTIONS
+
 const {
   generateRandomString,
   checkAbsoluteRoute,
@@ -72,9 +61,6 @@ app.get('/urls', (req, res) => {
   const url = "urls_index";
 
   confirmUserLoggedIn(user, res, templateVars, url);
-
-
-
 });
 
 app.get("/urls/new", (req, res) => {
@@ -171,17 +157,13 @@ app.get('/404_page', (req, res) => {
 
   res.render('404_page', templateVars);
 });
+
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
-  const templateVars = { user, shortURL};
 
   const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
-
-  //Do not redirect from confirmUserLoggedIn
-  const url = null;
-  confirmUserLoggedIn(user, res, templateVars, url);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[shortURL]) {
@@ -196,10 +178,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
         delete urlDatabase[shortURL];
       }
     }
-  } else {
+  } else { //No page rendered since this POST request can only be reached through website (which will require login) or curl command/web trawler that cannot render pages
     return res.status(400).send('<h1>You do not have permission to delete that URL</h1>');
   }
-
 
   res.redirect(302, "/urls");
 });
@@ -228,7 +209,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
         };
       }
     }
-  } else {
+  } else { //No page rendered since this POST request can only be reached through website (which will require login) or curl command/web trawler that cannot render pages
     return res.status(400).send('<h1>You do not have permission to delete that URL</h1>');
   }
 
@@ -251,6 +232,7 @@ app.post('/urls', (req, res) => {
     return res.redirect(302, '/urls');
   }
 
+  //No page rendered since this POST request can only be reached through website (which will require login) or curl command/web trawler that cannot render pages
   return res.status(400).send("<h1>You must be logged in to create new URLs.</h1>");
   
   
