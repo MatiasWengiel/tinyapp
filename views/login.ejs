@@ -28,12 +28,12 @@
           Only registered users may create or modify short URLs. Would you like to <a href="/register">register</a> instead?
         </div>
       <% } %>
-      <form class="form-inline" action="/login" method="POST">
+      <form class="form-group" action="/login" method="POST">
         <div class="form-group mb-2">
-          <label for="email">Email address</label>
-          <input class="form-control" type="email" name="email" placeholder="your@email.here" style="width: 300px; margin: 1em">
-          <label for="password">Password</label>
-          <input class="form-control" type="password" name="password" placeholder="Password" style="width:300px; margin: 1em">
+          <label class="col-form-label" for="email">Email address</label>
+          <input class="form-control ml-0" type="email" name="email" placeholder="your@email.here" style="width: 300px; margin: 1em">
+          <label class="col-form-label" for="password">Password</label>
+          <input class="form-control ml-0" type="password" name="password" placeholder="Password" style="width:300px; margin: 1em">
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </form>

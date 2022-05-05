@@ -2,20 +2,32 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
+app.use(express.static('public'))
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.set('view engine', 'ejs');
 
-// const cookieParser = require('cookie-parser');
-// app.use(cookieParser());
 const cookieSession = require('cookie-session');
 app.use(cookieSession({
   name: 'session',
   keys: ['th1sismysecretkeythatyouwillnevergue$s']
 }));
+
 const bcrypt = require('bcryptjs');
+
+// app.use((res, req, next) => {
+//   const userID = "sampleUser"
+//   const user = users[userID]
+//   const urls = sortLinksByUserID(userID, urlDatabase)
+//   res.locals = {
+//     //userID,
+//     user,
+//    // urls
+//   }
+//   next()
+// })
 
 //HELPER FUNCTIONS
 const {

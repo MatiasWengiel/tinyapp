@@ -23,12 +23,10 @@ const getUserIDByEmail = (email, database) => {
 
 
 const confirmUserLoggedIn = (user, res, templateVars, url) => {
-  templateVars.incorrectPasswordOrEmail = false;
-  templateVars.errorLoginNeeded = true;
   if (!user) {
-    return res.status(400).render('login', templateVars);
+    return res.status(400).render('login_needed', templateVars);
   }
-  return url ? res.render(url, templateVars) : null;
+  return res.render(url, templateVars)
 };
 
 
