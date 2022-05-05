@@ -24,7 +24,8 @@ const {
   checkAbsoluteRoute,
   getUserIDByEmail,
   confirmUserLoggedIn,
-  sortLinksByUserID
+  //sortLinksByUserID,
+  getVariables
 } = require('./helpers');
 
 
@@ -48,81 +49,66 @@ const users = {
   }
 };
 
+app.use((req, res, next) => {
+  getVariables(req)
+  next()
+})
 //GET REQUESTS
 app.get('/', (req, res) => {
   res.redirect(302, '/urls');
 });
 
 app.get('/urls', (req, res) => {
-  const userID = req.session.user_id;
-  const urls = sortLinksByUserID(userID, urlDatabase);
-  const user = users[userID];
-  const templateVars = { urls, user };
+  const vars = getVariables(req)
   const url = "urls_index";
 
-  confirmUserLoggedIn(user, res, templateVars, url);
+  confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = users[req.session.user_id];
-  const templateVars = {
-    user
-  };
-
+  const vars = getVariables(req)
   const url = "urls_new";
-  confirmUserLoggedIn(user, res, templateVars, url);
 
-
-
+  confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const shortURL = req.params.shortURL;
-  const user = users[req.session.user_id];
+  const vars = getVariables(req)
+
 
   //Checks to see if the shortURL exists in the database
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
-
-  const longURL = urlDatabase[shortURL].longURL;
-
-  
-  const templateVars = {
-    shortURL,
-    user,
-    longURL
-  };
+  //Can't be obtained with getVariables, throws an error if shortURL does not exist
+  const longURL = urlDatabase[vars.shortURL].longURL;
+  vars.longURL = longURL
 
   //Ensures the shortURL exists if typed by user and redirects to /404_page if not
   const url =   'urls_show';
 
-  confirmUserLoggedIn(user, res, templateVars, url);
+  confirmUserLoggedIn(vars.user, res, vars, url);
 
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const shortURL = req.params.shortURL;
+  const vars = getVariables(req)
 
   //Checks to see if the shortURL exists in the database
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
   
-  const longURL = urlDatabase[shortURL].longURL;
-  const templateVars = {
-    shortURL,
-    longURL,
-    urls: urlDatabase,
-  };
+  const longURL = urlDatabase[vars.shortURL].longURL;
+  vars.longURL = longURL
 
   //Ensures the shortURL exists if typed by user and redirects to /urls if not
-  templateVars.urls[shortURL] ? res.redirect(302, longURL) : res.redirect(302, '/urls');
+  templateVars.urls[vars.shortURL] ? res.redirect(302, longURL) : res.redirect(302, '/urls');
 });
 
 app.get('/register', (req, res) => {
   const user = users[req.session.user_id];
-  const templateVars = {
+  const registerVars = {
     user,
     //Next two variables are used for user alert in case of incomplete submission or existing email
     incorrectForm: false,
@@ -132,13 +118,13 @@ app.get('/register', (req, res) => {
   if (user) {
     return res.redirect(302, '/urls');
   }
-  res.render('register', templateVars);
+  res.render('register', registerVars);
   
 });
 
 app.get('/login', (req, res) => {
   const user = users[req.session.user_id];
-  const templateVars = {
+  const loginVars = {
     user,
     //Parameters below required for error handling (see login POST request)
     incorrectPasswordOrEmail: false,
@@ -147,35 +133,30 @@ app.get('/login', (req, res) => {
   if (user) {
     return res.redirect(302, '/urls');
   }
-  res.render('login', templateVars);
+  res.render('login', loginVars);
 
 });
 
 app.get('/404_page', (req, res) => {
-  const user = users[req.session.user_id];
-  const templateVars = { user };
+  const vars = getVariables(req)
 
-  res.render('404_page', templateVars);
+  res.render('404_page', vars);
 });
 
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const user = users[req.session.user_id];
-  const shortURL = req.params.shortURL;
-
-  const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
+  const vars = getVariables(req)
 
   //Checks to see if the shortURL exists in the database
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
-  
 
   // Ensures only users with the right permissions can delete urls
-  if (user) {
-    for (const eachShortURL in userLinks) {
-      if (eachShortURL === shortURL) {
-        delete urlDatabase[shortURL];
+  if (vars.user) {
+    for (const eachShortURL in vars.urls) {
+      if (eachShortURL === vars.shortURL) {
+        delete urlDatabase[vars.shortURL];
       }
     }
   } else { //No page rendered since this POST request can only be reached through website (which will require login) or curl command/web trawler that cannot render pages
@@ -186,26 +167,28 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  const user = users[req.session.user_id];
-  //Ensures paths to new websites are absolute rather than relative
-  const newURL = checkAbsoluteRoute(req.body.newURL);
-  const shortURL = req.params.shortURL;
+  // const user = users[req.session.user_id];
+  // //Ensures paths to new websites are absolute rather than relative
+  
+  // const shortURL = req.params.shortURL;
+  const vars = getVariables(req)
+  const newURL = checkAbsoluteRoute(req.body.longURL);
 
   //Checks to see if the shortURL exists in the database
-  if (!urlDatabase[shortURL]) {
+  if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
   
 
   // Ensures only users with the right permissions can edit urls
-  const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
+  //const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
     
-  if (user) {
-    for (const eachShortURL in userLinks) {
-      if (eachShortURL === shortURL) {
-        urlDatabase[shortURL] = {
+  if (vars.user) {
+    for (const eachShortURL in vars.urls) {
+      if (eachShortURL === vars.shortURL) {
+        urlDatabase[vars.shortURL] = {
           longURL: newURL,
-          userID: user.id
+          userID: vars.user.id
         };
       }
     }
@@ -217,17 +200,17 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  const user = users[req.session.user_id];
-  //const templateVars = { user };
+  const vars = getVariables(req);
+  //const user = users[req.session.user_id];
+  if (vars.user) {
 
-  if (user) {
-    const shortURL = generateRandomString();
-    // Ensures paths to new websites are absolute rather than relative
-    const newURL = checkAbsoluteRoute(req.body.longURL);
+   const shortURL = generateRandomString();
+   // Ensures paths to new websites are absolute rather than relative
+   const newURL = checkAbsoluteRoute(req.body.longURL);
 
     urlDatabase[shortURL] = {
-      longURL: newURL,
-      userID: req.session.user_id
+      longURL: vars.newURL,
+      userID: vars.user.id
     };
     return res.redirect(302, '/urls');
   }
@@ -246,23 +229,23 @@ app.post('/register', (req, res) => {
 
   //Checks to ensure the email and password fields are not blank. If they are, returns the register page with an alert banner
   if (!email || !password) {
-    const templateVars = {
+    const registerVars = {
       incorrectForm: true,
       existingEmail: false,
       user: users[req.session.user_id]
     };
-    res.status(400).render('register', templateVars);
+    res.status(400).render('register', registerVars);
   }
 
   //Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
   if (getUserIDByEmail(email, users)) {
-    const templateVars = {
+    const registerVars = {
       existingEmail: true,
       incorrectForm: false,
       user: users[req.session.user_id]
     };
 
-    res.status(400).render('register', templateVars);
+    res.status(400).render('register', registerVars);
   }
   //If checks pass, creates a new user with a randomly generated ID and the provided email and password, then sets a cookie on the client's browser with the user_id
   users[id] = {
@@ -288,21 +271,21 @@ app.post('/login', (req, res) => {
       return res.redirect(302, '/urls');
     }
     //Renders login page with incorrect password or email error if password is incorrect
-    const templateVars = {
+    const loginVars = {
       user: users[req.session.user_id],
       incorrectPasswordOrEmail: true,
       errorLoginNeeded: false
     };
-    return res.status(403).render('login', templateVars);
+    return res.status(403).render('login', loginVars);
   }
   //Renders the login page with incorrect password or email error if email does not exist
-  const templateVars = {
+  const loginVars = {
     user: users[req.session.user_id],
     incorrectPasswordOrEmail: true,
     errorLoginNeeded: false
   };
 
-  res.status(403).render('login', templateVars);
+  res.status(403).render('login', loginVars);
 
 });
 

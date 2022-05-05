@@ -17,9 +17,9 @@
         <p class="card-text">Short URL: <a href="<%= longURL %>"><%= shortURL %></a></p>
         <div class="bg-light" >
           <h5 class="card-title text-secondary">Edit</h5>
-          <label for="newURL" class="text-secondary">New URL</label>
+          <label for="longURL" class="text-secondary">New URL</label>
           <form class="form-col-md-4" action="/urls/<%= shortURL %>/edit" method="POST">
-          <input class="form-group " type="text" name="newURL" placeholder="http://" style="width: 300px; margin: 1em">
+          <input class="form-group " type="text" name="longURL" placeholder="http://" style="width: 300px; margin: 1em">
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
           </div>
