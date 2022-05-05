@@ -26,7 +26,7 @@ const confirmUserLoggedIn = (user, res, templateVars, url) => {
   if (!user) {
     return res.status(400).render('login_needed', templateVars);
   }
-  return res.render(url, templateVars)
+  return res.render(url, templateVars);
 };
 
 

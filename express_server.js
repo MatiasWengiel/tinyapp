@@ -2,7 +2,7 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
-app.use(express.static('public'))
+app.use(express.static('public'));
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -93,15 +93,23 @@ app.get("/urls/new", (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const user = users[req.session.user_id];
+
+  //Checks to see if the shortURL exists in the database
+  if (!urlDatabase[shortURL]) {
+    return res.redirect(404, '/404_page');
+  }
+
+  const longURL = urlDatabase[shortURL].longURL;
+
+  
   const templateVars = {
     shortURL,
     user,
-    urls: urlDatabase,
-    longURL: urlDatabase[shortURL].longURL,
+    longURL
   };
 
-  //Ensures the shortURL exists if typed by user and redirects to /urls if not
-  const url =   templateVars.urls[shortURL] ? res.render('urls_show', templateVars) : res.redirect(302, '/urls');
+  //Ensures the shortURL exists if typed by user and redirects to /404_page if not
+  const url =   'urls_show';
 
   confirmUserLoggedIn(user, res, templateVars, url);
 
@@ -109,6 +117,12 @@ app.get('/urls/:shortURL', (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
+
+  //Checks to see if the shortURL exists in the database
+  if (!urlDatabase[shortURL]) {
+    return res.redirect(404, '/404_page');
+  }
+  
   const longURL = urlDatabase[shortURL].longURL;
   const templateVars = {
     shortURL,
@@ -148,8 +162,15 @@ app.get('/login', (req, res) => {
     return res.redirect(302, '/urls');
   }
   res.render('login', templateVars);
+
 });
 
+app.get('/404_page', (req, res) => {
+  const user = users[req.session.user_id];
+  const templateVars = { user };
+
+  res.render('404_page', templateVars);
+});
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const user = users[req.session.user_id];
@@ -161,6 +182,12 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   //Do not redirect from confirmUserLoggedIn
   const url = null;
   confirmUserLoggedIn(user, res, templateVars, url);
+
+  //Checks to see if the shortURL exists in the database
+  if (!urlDatabase[shortURL]) {
+    return res.redirect(404, '/404_page');
+  }
+  
 
   // Ensures only users with the right permissions can delete urls
   if (user) {
@@ -183,7 +210,11 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   const newURL = checkAbsoluteRoute(req.body.newURL);
   const shortURL = req.params.shortURL;
 
-  //const templateVars = { user, shortURL};
+  //Checks to see if the shortURL exists in the database
+  if (!urlDatabase[shortURL]) {
+    return res.redirect(404, '/404_page');
+  }
+  
 
   // Ensures only users with the right permissions can edit urls
   const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
