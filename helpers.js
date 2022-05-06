@@ -41,19 +41,6 @@ const sortLinksByUserID = (userID, database) => {
   return userURLs;
 };
 
-const getVariables = (req) => {
-  const userID = req.session.user_id;
-  const user = users[userID]
-  const urls = sortLinksByUserID(userID, urlDatabase)
-  const shortURL = req.params.shortURL
-
-  return {
-    userID,
-    user,
-    urls,
-    shortURL
-  }
-}
 
 
 module.exports = {
@@ -61,6 +48,5 @@ module.exports = {
   checkAbsoluteRoute,
   getUserIDByEmail,
   confirmUserLoggedIn,
-  //sortLinksByUserID,
-  getVariables
+  sortLinksByUserID
 };

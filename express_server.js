@@ -24,9 +24,22 @@ const {
   checkAbsoluteRoute,
   getUserIDByEmail,
   confirmUserLoggedIn,
-  //sortLinksByUserID,
-  getVariables
+  sortLinksByUserID
 } = require('./helpers');
+
+const getVariables = (req) => {
+  const userID = req.session.user_id;
+  const user = users[userID];
+  const urls = sortLinksByUserID(userID, urlDatabase);
+  const shortURL = req.params.shortURL;
+
+  return {
+    userID,
+    user,
+    urls,
+    shortURL
+  };
+};
 
 
 //DATABASES
@@ -50,41 +63,37 @@ const users = {
 };
 
 app.use((req, res, next) => {
-  getVariables(req)
-  next()
-})
+  getVariables(req);
+  next();
+});
 //GET REQUESTS
 app.get('/', (req, res) => {
   res.redirect(302, '/urls');
 });
 
 app.get('/urls', (req, res) => {
-  const vars = getVariables(req)
+  const vars = getVariables(req);
   const url = "urls_index";
 
   confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get("/urls/new", (req, res) => {
-  const vars = getVariables(req)
+  const vars = getVariables(req);
   const url = "urls_new";
 
   confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const vars = getVariables(req)
-
+  const vars = getVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
-  //Can't be obtained with getVariables, throws an error if shortURL does not exist
-  const longURL = urlDatabase[vars.shortURL].longURL;
-  vars.longURL = longURL
-
-  //Ensures the shortURL exists if typed by user and redirects to /404_page if not
+  //longURL can't be obtained with getVariables directly
+  vars.longURL = urlDatabase[vars.shortURL].longURL;
   const url =   'urls_show';
 
   confirmUserLoggedIn(vars.user, res, vars, url);
@@ -92,7 +101,7 @@ app.get('/urls/:shortURL', (req, res) => {
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const vars = getVariables(req)
+  const vars = getVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
@@ -100,17 +109,17 @@ app.get('/u/:shortURL', (req, res) => {
   }
   
   const longURL = urlDatabase[vars.shortURL].longURL;
-  vars.longURL = longURL
+  vars.longURL = longURL;
 
   //Ensures the shortURL exists if typed by user and redirects to /urls if not
-  templateVars.urls[vars.shortURL] ? res.redirect(302, longURL) : res.redirect(302, '/urls');
+  vars.urls[vars.shortURL] ? res.redirect(302, longURL) : res.redirect(302, '/urls');
 });
 
 app.get('/register', (req, res) => {
   const user = users[req.session.user_id];
   const registerVars = {
     user,
-    //Next two variables are used for user alert in case of incomplete submission or existing email
+    //Next two variables are used for user alert in case of incomplete submission or existing email (see POST request)
     incorrectForm: false,
     existingEmail:false
   };
@@ -138,14 +147,14 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/404_page', (req, res) => {
-  const vars = getVariables(req)
+  const vars = getVariables(req);
 
   res.render('404_page', vars);
 });
 
 //POST REQUESTS
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const vars = getVariables(req)
+  const vars = getVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
@@ -167,11 +176,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 });
 
 app.post('/urls/:shortURL/edit', (req, res) => {
-  // const user = users[req.session.user_id];
-  // //Ensures paths to new websites are absolute rather than relative
-  
-  // const shortURL = req.params.shortURL;
-  const vars = getVariables(req)
+  const vars = getVariables(req);
   const newURL = checkAbsoluteRoute(req.body.longURL);
 
   //Checks to see if the shortURL exists in the database
@@ -179,9 +184,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
     return res.redirect(404, '/404_page');
   }
   
-
   // Ensures only users with the right permissions can edit urls
-  //const userLinks = sortLinksByUserID(req.session.user_id, urlDatabase);
     
   if (vars.user) {
     for (const eachShortURL in vars.urls) {
@@ -201,15 +204,15 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 
 app.post('/urls', (req, res) => {
   const vars = getVariables(req);
-  //const user = users[req.session.user_id];
+
   if (vars.user) {
 
-   const shortURL = generateRandomString();
-   // Ensures paths to new websites are absolute rather than relative
-   const newURL = checkAbsoluteRoute(req.body.longURL);
+    const shortURL = generateRandomString();
+    // Ensures paths to new websites are absolute rather than relative
+    const newURL = checkAbsoluteRoute(req.body.longURL);
 
     urlDatabase[shortURL] = {
-      longURL: vars.newURL,
+      longURL: newURL,
       userID: vars.user.id
     };
     return res.redirect(302, '/urls');
