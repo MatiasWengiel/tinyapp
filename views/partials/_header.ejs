@@ -12,7 +12,7 @@
       </div>
         <div class="navbar-nav">
           <% if (user) { %>
-            <form class="form-inline" action="/logout" method="POST">
+            <form class="form-inline" action="/logout?_method=DELETE" method="POST">
               <label class="nav-item text-dark font-weight-bold">Logged In As: <%= user.email %> </label>
               <button class="btn nav-item btn-success" type="submit">Log Out</button>
             </form>

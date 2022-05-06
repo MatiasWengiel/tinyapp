@@ -4,6 +4,9 @@ const app = express();
 const PORT = 8080;
 app.use(express.static('public'));
 
+const methodOverride = require('method-override');
+app.use(methodOverride('_method'));
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -153,7 +156,7 @@ app.get('/404_page', (req, res) => {
 });
 
 //POST REQUESTS
-app.post('/urls/:shortURL/delete', (req, res) => {
+app.delete('/urls/:shortURL/', (req, res) => {
   const vars = getVariables(req);
 
   //Checks to see if the shortURL exists in the database
@@ -175,7 +178,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect(302, "/urls");
 });
 
-app.post('/urls/:shortURL/edit', (req, res) => {
+app.put('/urls/:shortURL/', (req, res) => {
   const vars = getVariables(req);
   const newURL = checkAbsoluteRoute(req.body.longURL);
 
@@ -292,7 +295,7 @@ app.post('/login', (req, res) => {
 
 });
 
-app.post('/logout', (req, res) => {
+app.delete('/logout', (req, res) => {
   req.session = null;
   res.redirect(302, '/login');
 });
