@@ -56,7 +56,10 @@ const { urlDatabase, users } = require('./databases');
 
 //GET REQUESTS
 app.get('/', (req, res) => {
-  res.redirect(302, '/urls');
+  const vars = getCommonVariables(req);
+  const url = "urls_index"
+  
+  confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get('/urls', (req, res) => {
