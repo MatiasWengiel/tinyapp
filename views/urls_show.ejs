@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<header>
-  <%- include('partials/_header') %>
-</header>
 
 <head>
   <!-- Bootstrap CSS -->
@@ -10,6 +7,10 @@
   <title>URL - TinyApp Example</title>
 </head>
 <body>
+  <header>
+    <%- include('partials/_header') %>
+  </header>
+  
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
@@ -23,7 +24,7 @@
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
           </div>
-        <p class="card-text">Create your next short URL <a href=#>here</a></p>
+        <p class="card-text">Create your next short URL <a href='/urls/new'>here</a></p>
       </div>
     <div class="card-footer text-muted"></div>
   </div>
