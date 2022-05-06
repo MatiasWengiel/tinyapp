@@ -30,7 +30,8 @@ const {
   sortLinksByUserID
 } = require('./helpers');
 
-const getVariables = (req) => {
+
+const getCommonVariables = (req) => {
   const userID = req.session.user_id;
   const user = users[userID];
   const urls = sortLinksByUserID(userID, urlDatabase);
@@ -44,58 +45,42 @@ const getVariables = (req) => {
   };
 };
 
-
-//DATABASES
-const urlDatabase = {
-  'b2xVn2': {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: 'sampleUser'
-  },
-  '9sm5xK': {
-    longURL: 'http://www.google.ca',
-    userID: 'sampleUser'
-  }
-};
-
-const users = {
-  'sampleUser': {
-    id: 'sampleUser',
-    email: 'a@a',
-    password: 'a'
-  }
-};
-
 app.use((req, res, next) => {
-  getVariables(req);
+  getCommonVariables(req);
   next();
 });
+
+//DATABASES
+const { urlDatabase, users } = require('./databases');
+
+
 //GET REQUESTS
 app.get('/', (req, res) => {
   res.redirect(302, '/urls');
 });
 
 app.get('/urls', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
   const url = "urls_index";
 
   confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get("/urls/new", (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
   const url = "urls_new";
 
   confirmUserLoggedIn(vars.user, res, vars, url);
 });
 
 app.get('/urls/:shortURL', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
-  //longURL can't be obtained with getVariables directly
+  //longURL can't be obtained with getCommonVariables directly
   vars.longURL = urlDatabase[vars.shortURL].longURL;
   const url =   'urls_show';
 
@@ -104,7 +89,7 @@ app.get('/urls/:shortURL', (req, res) => {
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
@@ -150,14 +135,14 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/404_page', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
 
   res.render('404_page', vars);
 });
 
 //POST REQUESTS
 app.delete('/urls/:shortURL/', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
 
   //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
@@ -179,7 +164,7 @@ app.delete('/urls/:shortURL/', (req, res) => {
 });
 
 app.put('/urls/:shortURL/', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
   const newURL = checkAbsoluteRoute(req.body.longURL);
 
   //Checks to see if the shortURL exists in the database
@@ -206,7 +191,7 @@ app.put('/urls/:shortURL/', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  const vars = getVariables(req);
+  const vars = getCommonVariables(req);
 
   if (vars.user) {
 
