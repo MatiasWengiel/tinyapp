@@ -238,9 +238,12 @@ app.post('/register', (req, res) => {
     const registerVars = {
       incorrectForm: true,
       existingEmail: false,
-      user: users[req.session.user_id]
+      user: ""
+
     };
-    res.status(400).render('register', registerVars);
+
+    return res.status(400).render('register', registerVars);
+    
   }
 
   //Checks to ensure the email does not already exist in the database. If it does, returns the register page with an alert banner
@@ -251,7 +254,7 @@ app.post('/register', (req, res) => {
       user: users[req.session.user_id]
     };
 
-    res.status(400).render('register', registerVars);
+    return res.status(400).render('register', registerVars);
   }
   //If checks pass, creates a new user with a randomly generated ID and the provided email and password, then sets a cookie on the client's browser with the user_id
   users[id] = {
