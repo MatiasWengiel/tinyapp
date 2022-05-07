@@ -58,15 +58,14 @@ const { urlDatabase, users } = require('./databases');
 app.get('/', (req, res) => {
   const vars = {
     user: users[req.session.user_id]
-  }
-  const url = "frontPage"
+  };
     
-  if(vars.user) {
-   return res.redirect(302, '/urls')
+  if (vars.user) {
+    return res.redirect(302, '/urls');
   }
   
-  if(!vars.user) {
-    return res.render('frontPage', vars)
+  if (!vars.user) {
+    return res.render('frontPage', vars);
   }
 });
 
