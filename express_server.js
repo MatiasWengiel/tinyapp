@@ -94,13 +94,13 @@ app.get('/urls/:shortURL', (req, res) => {
   vars.longURL = urlDatabase[vars.shortURL].longURL;
 
   if (!vars.user) {
-    return res.status(400).render('login_needed', templateVars)
+    return res.status(400).render('login_needed', vars);
   }
   
-  if(vars.user) {
+  if (vars.user) {
     //Checks to see if user has permission to see the URL, redirects to 404 if not so user without permission does not know the page exists
-    vars.urls[vars.shortURL] ? res.render('urls_show', vars) : res.redirect(404, '/404_page')
-  } 
+    vars.urls[vars.shortURL] ? res.render('urls_show', vars) : res.redirect(404, '/404_page');
+  }
 
 });
 
