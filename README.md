@@ -1,5 +1,5 @@
 # tinyApp - URL Shortener
-## Made by Matias Wengiel for the Lighthouse Labs Web Developer Program
+### Made by Matias Wengiel for the Lighthouse Labs Web Developer Program
 <br>
 
 # Description:
