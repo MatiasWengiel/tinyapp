@@ -1,6 +1,6 @@
 //HELPER FUNCTIONS
 const generateRandomString = () => {
-  let randomOutput = Math.random().toString(36); //Generates a pseudo-random number and turns it into a string
+  let randomOutput = Math.random().toString(36);
   return randomOutput.substring(2, 8); //Returns six characters from the middle of the string for increased randomization
 };
 

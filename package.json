@@ -1,7 +1,7 @@
 {
   "name": "tinyapp",
   "version": "1.0.0",
-  "description": "",
+  "description": "tinyApp is a full-stack URL shortener. Created as part of the Lighthouse Labs Web Developer Program",
   "main": "express_server.js",
   "scripts": {
     "start": "./node_modules/.bin/nodemon -L express_server.js",
