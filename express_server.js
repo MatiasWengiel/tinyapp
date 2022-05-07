@@ -86,15 +86,21 @@ app.get("/urls/new", (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const vars = getCommonVariables(req);
 
-  //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
+
   //longURL can't be obtained with getCommonVariables directly
   vars.longURL = urlDatabase[vars.shortURL].longURL;
-  const url =   'urls_show';
 
-  confirmUserLoggedIn(vars.user, res, vars, url);
+  if (!vars.user) {
+    return res.status(400).render('login_needed', templateVars)
+  }
+  
+  if(vars.user) {
+    //Checks to see if user has permission to see the URL, redirects to 404 if not so user without permission does not know the page exists
+    vars.urls[vars.shortURL] ? res.render('urls_show', vars) : res.redirect(404, '/404_page')
+  } 
 
 });
 
