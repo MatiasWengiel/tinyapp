@@ -36,14 +36,14 @@ Dependencies:
 # Screenshots
 
 Login Page:
-![Log in page](./docs/loginPage.png)
+![Log in page](https://github.com/MatiasWengiel/tinyapp/blob/master/docs/loginPage.png)
 
 Individual "home" page showing URLs and options
-![urls page](./docs/urlsPage.png)
+![urls page](https://github.com/MatiasWengiel/tinyapp/blob/master/docs/urlsPage.png)
 
 Users can edit the URL linked to each short (and randomly generated) url:
-![edit url page](./docs/editURL.png)
+![edit url page](https://github.com/MatiasWengiel/tinyapp/blob/master/docs/editURL.png)
 
 You best be careful, if you try to access a page without the right permissions you may run into the ferocious page protector!
-![login needed page](./docs/loginNeededPage.png)
+![login needed page](https://github.com/MatiasWengiel/tinyapp/blob/master/docs/loginNeededPage.png)
 
