@@ -101,7 +101,6 @@ app.get('/urls/:shortURL', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   const vars = getCommonVariables(req);
 
-  //Checks to see if the shortURL exists in the database
   if (!urlDatabase[vars.shortURL]) {
     return res.redirect(404, '/404_page');
   }
@@ -264,10 +263,11 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   //Will have the user_id of an existing email, or false otherwise
   const existingEmail = getUserIDByEmail(email, users);
+  const user = users[existingEmail];
 
   if (existingEmail) {
     //Logs in if password correct
-    if (bcrypt.compareSync(password, users[existingEmail].hashedPassword)) {
+    if (bcrypt.compareSync(password, user.hashedPassword)) {
       req.session.user_id = existingEmail;
       return res.redirect(302, '/urls');
     }
